@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Floating Neon Letters</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, 
+        #0f0c29, #302b63, #24243e, 
+        #1a1a2e, #16213e, #0f3460, 
+        #1a2a6c, #b21f1f, #fdbb2d);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      backdrop-filter: blur(2px);
+    }
+
+    .letter {
+      position: absolute;
+      font-weight: 900;
+      font-family: 'Arial Black', sans-serif;
+      color: white;
+      text-shadow:
+        0 0 5px #fff,
+        0 0 10px currentColor,
+        0 0 20px currentColor,
+        0 0 40px currentColor;
+      animation: 
+        float 5s ease-in-out infinite;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-text-stroke: 2px;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.7));
+      text-stroke: 2px currentColor;
+      -webkit-text-fill-color: transparent;
+      z-index: 10;
+      transform-origin: center center;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 1;
+      animation: particle-float linear infinite;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-30px);
+      }
+    }
+
+    @keyframes particle-float {
+      0% {
+        transform: translateY(0) translateX(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-100vh) translateX(20px);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="container"></div>
+
+  <script>
+    const letters = [
+      { char: 'C', color: '#FF00D4' },
+      { char: 'R', color: '#00F0FF' },
+      { char: 'O', color: '#FF9900' },
+      { char: 'V', color: '#00FF66' },
+      { char: 'A', color: '#CC00FF' },
+      { char: 'T', color: '#FF0066' },
+      { char: 'E', color: '#00CCFF' }
+    ];
+
+    const container = document.getElementById('container');
+    let positions = [];
+    let letterElements = [];
+
+    function vh(v) {
+      return window.innerHeight * (v / 100);
+    }
+
+    function vw(v) {
+      return window.innerWidth * (v / 100);
+    }
+
+    function calculateLetterSize() {
+      // Increased base size (changed from 0.08 to 0.12)
+      const baseSize = Math.min(
+        Math.max(
+          window.innerWidth * 0.12, // 12% of viewport width (was 8%)
+          60 // increased minimum size (was 40)
+        ),
+        200 // increased maximum size (was 144)
+      );
+      return baseSize;
+    }
+
+    function calculateMinDistance(letterSize) {
+      return letterSize * 0.9;
+    }
+
+    function calculateVerticalRange() {
+      // Adjust vertical range based on screen height
+      const baseRange = [5, 60];
+      if (window.innerHeight < 600) {
+        return [10, 70]; // More compact for short screens
+      }
+      return baseRange;
+    }
+
+    function createLetters() {
+      // Clear existing letters
+      letterElements.forEach(el => el.remove());
+      letterElements = [];
+      positions = [];
+
+      const letterSize = calculateLetterSize();
+      const minDistance = calculateMinDistance(letterSize);
+      const verticalRange = calculateVerticalRange();
+
+      letters.forEach((letter, index) => {
+        const div = document.createElement('div');
+        div.classList.add('letter');
+        div.innerText = letter.char;
+
+        // Set responsive font size
+        div.style.fontSize = `${letterSize}px`;
+        
+        div.style.color = letter.color;
+        div.style.textShadow = `0 0 5px #fff, 
+          0 0 10px ${letter.color}, 
+          0 0 20px ${letter.color}, 
+          0 0 40px ${letter.color}`;
+        div.style.webkitTextStrokeColor = letter.color;
+
+        const floatDuration = 3 + Math.random() * 4;
+        const rotationDuration = 10 + Math.random() * 20;
+        const rotationAmplitude = 2 + Math.random() * 5;
+
+        // Create unique animation for each letter
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes rotate-${index} {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(${rotationAmplitude}deg); }
+            50% { transform: rotate(0deg); }
+            75% { transform: rotate(-${rotationAmplitude}deg); }
+            100% { transform: rotate(0deg); }
+          }
+        `;
+        document.head.appendChild(style);
+
+        div.style.animation = `float ${floatDuration}s ease-in-out infinite, rotate-${index} ${rotationDuration}s ease-in-out infinite`;
+
+        let top, left, topPx, leftPx;
+        let attempts = 0;
+        const maxAttempts = 100;
+
+        // Find a position that doesn't overlap with existing letters
+        do {
+          top = verticalRange[0] + Math.random() * (verticalRange[1] - verticalRange[0]);
+          left = 10 + Math.random() * 80;
+          topPx = vh(top);
+          leftPx = vw(left);
+          attempts++;
+          if (attempts >= maxAttempts) break;
+        } while (positions.some(pos => {
+          const dx = pos.leftPx - leftPx;
+          const dy = pos.topPx - topPx;
+          return Math.sqrt(dx * dx + dy * dy) < minDistance;
+        }));
+
+        positions.push({ top, left, topPx, leftPx });
+
+        div.style.top = top + 'vh';
+        div.style.left = left + 'vw';
+        div.style.animationDelay = (Math.random() * 3).toFixed(2) + 's';
+        div.style.transform = `rotate(${(Math.random() * 10 - 5)}deg)`;
+
+        container.appendChild(div);
+        letterElements.push(div);
+      });
+    }
+
+    function createParticles() {
+      // Clear existing particles
+      const existingParticles = document.querySelectorAll('.particle');
+      existingParticles.forEach(el => el.remove());
+
+      const particleColors = [
+        '#FF00D4', '#00F0FF', '#FF9900', 
+        '#00FF66', '#CC00FF', '#FF0066', '#00CCFF',
+        '#FFFFFF', '#FFDD00', '#00FFAA'
+      ];
+
+      // Adjust number of particles based on screen size
+      const particleCount = Math.min(
+        Math.floor((window.innerWidth * window.innerHeight) / 5000),
+        100
+      );
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.classList.add('particle');
+
+        const size = Math.random() * 4 + 2;
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+
+        const color = particleColors[Math.floor(Math.random() * particleColors.length)];
+        particle.style.backgroundColor = color;
+        particle.style.boxShadow = `0 0 ${size*2}px ${size}px ${color}`;
+
+        particle.style.left = `${Math.random() * 100}vw`;
+        particle.style.top = `${100 + Math.random() * 20}vh`;
+
+        const duration = 10 + Math.random() * 20;
+        particle.style.animationDuration = `${duration}s`;
+        particle.style.animationDelay = `${Math.random() * 10}s`;
+
+        container.appendChild(particle);
+      }
+    }
+
+    function init() {
+      createLetters();
+      createParticles();
+    }
+
+    // Handle window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        createLetters();
+        createParticles();
+      }, 200);
+    });
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>

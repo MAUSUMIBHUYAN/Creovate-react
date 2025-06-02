@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northern Lights</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #020c1b;
+    }
+
+    .northern-lights-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(to bottom, #010510 0%, #020c1b 50%, #0a1a2e 100%);
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .aurora {
+      position: absolute;
+      width: 150%;
+      height: 80%;
+      filter: blur(80px) brightness(1.3);
+      transform: scaleY(1.5);
+      animation-iteration-count: infinite;
+      animation-timing-function: ease-in-out;
+      pointer-events: none;
+      will-change: transform;
+      mix-blend-mode: screen;
+      opacity: 0.9;
+    }
+
+    .aurora1 {
+      top: -20%;
+      left: -20%;
+      background: 
+        radial-gradient(
+          circle at 40% 50%, 
+          rgba(50, 255, 150, 0.7),  /* More intense teal */
+          transparent 70%
+        );
+      animation: move1 11s ease-in-out infinite;
+    }
+
+    .aurora2 {
+      top: -15%;
+      left: -10%;
+      background: 
+        radial-gradient(
+          circle at 60% 50%, 
+          rgba(50, 220, 255, 0.6), /* Brighter blue */
+          transparent 70%
+        ),
+        linear-gradient(
+          to right,
+          rgba(0, 200, 255, 0.4),
+          transparent 50%
+        );
+      animation: move2 15s ease-in-out infinite;
+    }
+
+    .aurora3 {
+      top: -10%;
+      left: 10%;
+      background: 
+        radial-gradient(
+          ellipse at 50% 60%, 
+          rgba(255, 50, 255, 0.5),  /* More vivid purple */
+          transparent 70%
+        ),
+        linear-gradient(
+          to left,
+          rgba(200, 50, 255, 0.4),
+          transparent 50%
+        );
+      animation: move3 13s ease-in-out infinite;
+    }
+
+    @keyframes move1 {
+      0%, 100% { 
+        transform: translateX(0%) scaleY(1.5) rotate(2deg); 
+        opacity: 0.8;
+      }
+      50% { 
+        transform: translateX(10%) scaleY(1.8) rotate(-3deg); 
+        opacity: 1;
+      }
+    }
+
+    @keyframes move2 {
+      0%, 100% { 
+        transform: translateX(0%) scaleY(1.4) rotate(-1deg); 
+        opacity: 0.7;
+      }
+      50% { 
+        transform: translateX(-15%) scaleY(1.7) rotate(4deg); 
+        opacity: 1;
+      }
+    }
+
+    @keyframes move3 {
+      0%, 100% { 
+        transform: translateX(0%) scaleY(1.3) rotate(3deg); 
+        opacity: 0.75;
+      }
+      50% { 
+        transform: translateX(12%) scaleY(1.6) rotate(-2deg); 
+        opacity: 1;
+      }
+    }
+
+    .mountains {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 35%;
+      background: 
+        linear-gradient(
+          to top,
+          rgba(8, 15, 30, 0.95) 0%,
+          rgba(0, 80, 120, 0.5) 30%,
+          rgba(100, 0, 150, 0.3) 60%,
+          transparent 100%
+        ),
+        radial-gradient(
+          ellipse at 30% 100%,
+          rgba(150, 0, 180, 0.25) 0%,
+          transparent 70%
+        ),
+        radial-gradient(
+          ellipse at 70% 100%,
+          rgba(0, 200, 150, 0.25) 0%,
+          transparent 70%
+        );
+      clip-path: polygon(
+        0% 100%, 2% 80%, 5% 85%, 8% 75%, 12% 90%,
+        18% 70%, 25% 85%, 35% 65%, 45% 90%, 55% 75%,
+        65% 95%, 75% 80%, 85% 100%, 95% 85%, 100% 100%
+      );
+      z-index: 1;
+      box-shadow:
+        0 -15px 40px rgba(0, 210, 255, 0.35),
+        0 -15px 30px rgba(160, 0, 200, 0.3);
+    }
+
+    @keyframes mountain-glow {
+      0%, 100% {
+        opacity: 0.95;
+        box-shadow:
+          0 -15px 40px rgba(0, 210, 255, 0.35),
+          0 -15px 30px rgba(160, 0, 200, 0.3);
+      }
+      50% {
+        opacity: 1;
+        box-shadow:
+          0 -25px 60px rgba(0, 230, 255, 0.45),
+          0 -25px 50px rgba(190, 0, 230, 0.4);
+      }
+    }
+
+    .mountains {
+      animation: mountain-glow 9s ease-in-out infinite;
+    }
+
+    /* Aurora pulse effect */
+    @keyframes aurora-pulse {
+      0%, 100% { filter: blur(80px) brightness(1.3); }
+      50% { filter: blur(90px) brightness(1.6); }
+    }
+
+    .aurora1 { animation: move1 11s ease-in-out infinite, aurora-pulse 7s ease-in-out infinite; }
+    .aurora2 { animation: move2 15s ease-in-out infinite, aurora-pulse 9s ease-in-out infinite; }
+    .aurora3 { animation: move3 13s ease-in-out infinite, aurora-pulse 11s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <div class="northern-lights-container">
+    <div class="aurora aurora1"></div>
+    <div class="aurora aurora2"></div>
+    <div class="aurora aurora3"></div>
+    <div class="mountains"></div>
+  </div>
+</body>
+</html>
