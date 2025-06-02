@@ -54,7 +54,7 @@ export const ContactSection = () => {
             Want to know more about me? Check out my portfolio.
           </p>
           <motion.a
-            href="#portfolio"
+            href="https://portfolio-nine-lemon-70.vercel.app/"
             className="inline-block px-6 py-3 text-lg font-medium rounded-md bg-gradient-to-r from-yellow-600/30 to-yellow-400/20 border-2 border-yellow-300/50 text-white hover:opacity-90 transition-opacity"
             whileHover={{ 
               scale: 1.05,
