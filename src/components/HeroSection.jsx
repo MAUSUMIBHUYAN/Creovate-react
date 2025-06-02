@@ -42,7 +42,7 @@ export const HeroSection = () => {
           </h1>
 
           {/* Subtitle with CTA Button grouped together */}
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-12 md:space-y-20">
             <div className="relative inline-block">
               <p className="text-xl md:text-4xl max-w-4xl mx-auto opacity-0 animate-fade-in-delay-2 leading-relaxed">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-gray-200 to-yellow-400 bg-[length:300%_auto] animate-gradient-flow-reverse font-bold tracking-wider">

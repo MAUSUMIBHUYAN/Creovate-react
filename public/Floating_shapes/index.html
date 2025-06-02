@@ -36,14 +36,14 @@
       filter: 
         drop-shadow(0 0 8px rgba(255, 255, 255, 0.2))
         blur(0.5px);
-      animation: float 25s infinite ease-in-out alternate;
+      animation: float 25s infinite ease-in-out;
       z-index: 1;
       will-change: transform;
       transition: transform 0.5s ease-out;
     }
 
     @keyframes float {
-      0%, 100% {
+      0% {
         transform: translate(0, 0) scale(1) rotate(0deg);
       }
       20% {
@@ -57,6 +57,9 @@
       }
       80% {
         transform: translate(-5vw, -15vh) scale(0.98) rotate(-5deg);
+      }
+      100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
       }
     }
 
@@ -123,7 +126,7 @@
     }
 
     @keyframes float-2 {
-      0%, 100% {
+      0% {
         transform: translate(0, 0) scale(1) rotate(0deg);
       }
       25% {
@@ -135,10 +138,13 @@
       75% {
         transform: translate(-10vw, -12vh) scale(1.15) rotate(-5deg);
       }
+      100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
     }
 
     @keyframes float-3 {
-      0%, 100% {
+      0% {
         transform: translate(0, 0) scale(1) rotate(0deg);
       }
       33% {
@@ -146,6 +152,9 @@
       }
       66% {
         transform: translate(-15vw, 8vh) scale(0.93) rotate(-12deg);
+      }
+      100% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
       }
     }
   </style>
@@ -167,7 +176,7 @@
         'rgba(255, 160, 120, 0.5)',  // Coral
         'rgba(160, 120, 255, 0.5)'    // Purple
       ];
-      const numShapes = window.innerWidth < 768 ? 15 : 30;
+      const numShapes = window.innerWidth < 768 ? 15 : 20;
 
       for (let i = 0; i < numShapes; i++) {
         createShape();
@@ -177,9 +186,9 @@
         const shape = document.createElement('div');
         const shapeType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
         const color = colors[Math.floor(Math.random() * colors.length)];
-        const size = Math.random() * 80 + 40; // Larger size range
-        const duration = Math.random() * 20 + 20; // Longer duration
-        const delay = Math.random() * 15;
+        const size = Math.random() * 80 + 40;
+        const duration = Math.random() * 20 + 20;
+        const delay = Math.random() * -15; // Negative delay to start animations at different points
         const blur = Math.random() * 1.5;
 
         shape.className = `shape ${shapeType}`;
@@ -199,7 +208,7 @@
           shape.style.borderRightWidth = `${size / 2}px`;
           shape.style.borderBottomWidth = `${size}px`;
           shape.style.borderBottomColor = color;
-          shape.style.color = color; // For the drop-shadow
+          shape.style.color = color;
         }
 
         shape.style.animationDuration = `${duration}s`;
@@ -209,20 +218,20 @@
         container.appendChild(shape);
       }
 
-      // Better resize handling
+      // Resize handling
       let resizeTimeout;
       window.addEventListener('resize', () => {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(() => {
           container.innerHTML = '';
-          const newNumShapes = window.innerWidth < 768 ? 15 : 30;
+          const newNumShapes = window.innerWidth < 768 ? 15 : 20;
           for (let i = 0; i < newNumShapes; i++) {
             createShape();
           }
         }, 200);
       });
 
-      // Interactive element - optional
+      // Interactive element
       document.addEventListener('mousemove', (e) => {
         const shapes = document.querySelectorAll('.shape');
         shapes.forEach(shape => {
