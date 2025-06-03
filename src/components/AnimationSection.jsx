@@ -150,135 +150,20 @@ const animations = [
   },
 ];
 
-const AnimationRow = ({ title, animations }) => {
-  const scrollRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const [showLeft, setShowLeft] = useState(false);
-  const [showRight, setShowRight] = useState(true);
-  const [showScrollbar, setShowScrollbar] = useState(false);
-  const [hoveredId, setHoveredId] = useState(null);
-  const [likedAnimations, setLikedAnimations] = useState([]);
-
-  // Throttle scroll checks
-  const checkScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    setShowLeft(el.scrollLeft > 0);
-    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
-    setShowScrollbar(true);
-    
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    // Initial check
-    checkScroll();
-    
-    // Add passive scroll listener
-    el.addEventListener("scroll", checkScroll, { passive: true });
-    timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
-
-    return () => {
-      el.removeEventListener("scroll", checkScroll);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [checkScroll]);
-
-  const scroll = useCallback((direction) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const scrollAmount = 300;
-    el.scrollBy({ 
-      left: direction === "left" ? -scrollAmount : scrollAmount, 
-      behavior: "smooth" 
-    });
-  }, []);
-
-  const handleLike = useCallback((id, e) => {
-    e.stopPropagation();
-    setLikedAnimations(prev => {
-      if (prev.includes(id)) {
-        return prev.filter(animId => animId !== id);
-      } else {
-        alert(`Thanks for liking this animation!`);
-        return [...prev, id];
-      }
-    });
-  }, []);
-
-  // Memoize the animation items to prevent unnecessary re-renders
-  const animationItems = useMemo(() => animations.map((animation) => (
-    <AnimationItem 
-      key={animation.id}
-      animation={animation}
-      hoveredId={hoveredId}
-      setHoveredId={setHoveredId}
-      isLiked={likedAnimations.includes(animation.id)}
-      handleLike={handleLike}
-    />
-  )), [animations, hoveredId, likedAnimations, handleLike]);
-
-  return (
-    <div className="mb-20 relative z-10">
-      <motion.h3
-        className="text-3xl font-bold mb-4 text-left text-white px-4"
-        initial={{ opacity: 0, x: -20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5 }}
-        viewport={{ once: true }}
-      >
-        <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">{title}</span>
-      </motion.h3>
-
-      <div className="relative">
-        {showLeft && (
-          <ScrollButton direction="left" onClick={() => scroll("left")} />
-        )}
-
-        {showRight && (
-          <ScrollButton direction="right" onClick={() => scroll("right")} />
-        )}
-
-        <div
-          className={`flex overflow-x-auto overflow-y-hidden pb-2 -mx-4 px-4 space-x-6 scroll-smooth ${
-            showScrollbar ? "scrollbar-thin" : "scrollbar-none"
-          }`}
-          ref={scrollRef}
-          onMouseEnter={() => setShowScrollbar(true)}
-          onMouseLeave={() => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
-          }}
-        >
-          {animationItems}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Extracted Animation Item component for better performance
 const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked, handleLike }) => {
   const videoRef = useRef(null);
   const hoverTimerRef = useRef(null);
   
   const handleMouseEnter = () => {
-    // Set a timer to play the video after 3 seconds
     hoverTimerRef.current = setTimeout(() => {
       setHoveredId(animation.id);
       if (videoRef.current) {
         videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
       }
-    }, 3000); // 3000ms = 3 seconds
+    }, 3000);
   };
 
   const handleMouseLeave = () => {
-    // Clear the timer if user leaves before the delay
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
@@ -286,14 +171,13 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
     
     if (videoRef.current) {
       videoRef.current.pause();
-      videoRef.current.currentTime = 0; // Reset to beginning
+      videoRef.current.currentTime = 0;
     }
     setHoveredId(null);
   };
 
   useEffect(() => {
     return () => {
-      // Clean up timer on unmount
       if (hoverTimerRef.current) {
         clearTimeout(hoverTimerRef.current);
       }
@@ -311,7 +195,6 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Video Preview - lazy loaded */}
       <video
         ref={videoRef}
         src={animation.preview}
@@ -323,7 +206,6 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
         style={{ display: hoveredId === animation.id ? 'block' : 'none' }}
       />
       
-      {/* Thumbnail - lazy loaded */}
       <img
         src={animation.thumbnail}
         alt={animation.title}
@@ -332,10 +214,8 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
         style={{ display: hoveredId === animation.id ? 'none' : 'block' }}
       />
 
-      {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
 
-      {/* Content */}
       <div className="relative z-20 h-full flex flex-col justify-end p-6">
         <motion.h3 
           className="text-2xl font-bold text-white mb-2"
@@ -388,10 +268,9 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
   );
 });
 
-// Extracted Scroll Button component
-const ScrollButton = React.memo(({ direction, onClick }) => (
+const ScrollButton = React.memo(({ direction, onClick, className = '' }) => (
   <button
-    className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 transform -translate-y-1/2 z-20 p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition`}
+    className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 transform -translate-y-1/2 z-20 p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition ${className}`}
     onClick={onClick}
     aria-label={`Scroll ${direction}`}
   >
@@ -403,8 +282,204 @@ const ScrollButton = React.memo(({ direction, onClick }) => (
   </button>
 ));
 
+const AnimationRow = ({ title, animations }) => {
+  const scrollRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const [showRight, setShowRight] = useState(true);
+  const [showScrollbar, setShowScrollbar] = useState(false);
+  const [hoveredId, setHoveredId] = useState(null);
+  const [likedAnimations, setLikedAnimations] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    setShowLeft(el.scrollLeft > 0);
+    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
+    setShowScrollbar(true);
+    
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    checkScroll();
+    
+    el.addEventListener("scroll", checkScroll, { passive: true });
+    timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
+
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [checkScroll]);
+
+  const scroll = useCallback((direction) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    const scrollAmount = el.clientWidth * 0.8;
+    
+    el.scrollBy({ 
+      left: direction === "left" ? -scrollAmount : scrollAmount, 
+      behavior: "smooth" 
+    });
+  }, []);
+
+  const handleTouchStart = useCallback((e) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - el.offsetLeft);
+    setScrollLeft(el.scrollLeft);
+  }, []);
+
+  const handleTouchMove = useCallback((e) => {
+    if (!isDragging) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    
+    e.preventDefault();
+    const x = e.touches[0].pageX - el.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    el.scrollLeft = scrollLeft - walk;
+  }, [isDragging, startX, scrollLeft]);
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleLike = useCallback((id, e) => {
+    e.stopPropagation();
+    setLikedAnimations(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(animId => animId !== id);
+      } else {
+        alert(`Thanks for liking this animation!`);
+        return [...prev, id];
+      }
+    });
+  }, []);
+
+  const animationItems = useMemo(() => animations.map((animation) => (
+    <AnimationItem 
+      key={animation.id}
+      animation={animation}
+      hoveredId={hoveredId}
+      setHoveredId={setHoveredId}
+      isLiked={likedAnimations.includes(animation.id)}
+      handleLike={handleLike}
+    />
+  )), [animations, hoveredId, likedAnimations, handleLike]);
+
+  return (
+    <div className="mb-20 relative z-10">
+      <div className="flex items-center justify-between px-4 mb-4">
+        <motion.h3
+          className="text-3xl font-bold text-left text-white"
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
+          viewport={{ once: true }}
+        >
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">
+            {title}
+          </span>
+        </motion.h3>
+        
+        {/* Desktop scroll hint */}
+        <motion.div 
+          className="hidden md:flex items-center gap-2 text-yellow-200/80 text-sm"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          viewport={{ once: true }}
+        >
+          <ChevronRight className="w-4 h-4" />
+          <span>Scroll to see more</span>
+        </motion.div>
+      </div>
+
+      {/* Mobile swipe hint */}
+      <motion.div 
+        className="md:hidden flex items-center gap-2 text-yellow-200/80 text-sm px-4 mb-4"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        viewport={{ once: true }}
+      >
+        <ChevronRight className="w-4 h-4" />
+        <span>Swipe to see more</span>
+      </motion.div>
+
+      <div className="relative">
+        {showLeft && (
+          <ScrollButton 
+            direction="left" 
+            onClick={() => scroll("left")} 
+            className="hidden md:block"
+          />
+        )}
+
+        {showRight && (
+          <ScrollButton 
+            direction="right" 
+            onClick={() => scroll("right")} 
+            className="hidden md:block"
+          />
+        )}
+
+        <div className="md:hidden flex justify-between w-full absolute top-1/2 -translate-y-1/2 z-20 px-2">
+          {showLeft && (
+            <button
+              onClick={() => scroll("left")}
+              className="p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft className="text-white w-6 h-6" />
+            </button>
+          )}
+          {showRight && (
+            <button
+              onClick={() => scroll("right")}
+              className="p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="text-white w-6 h-6" />
+            </button>
+          )}
+        </div>
+
+        <div
+          className={`flex overflow-x-auto overflow-y-hidden pb-2 -mx-4 px-4 space-x-6 scroll-smooth ${
+            showScrollbar ? "scrollbar-thin" : "scrollbar-none"
+          }`}
+          ref={scrollRef}
+          onMouseEnter={() => setShowScrollbar(true)}
+          onMouseLeave={() => {
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {animationItems}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const AnimationSection = () => {
-  // Memoize filtered animations to prevent unnecessary recalculations
   const [artAnimations, motionCraftAnimations] = useMemo(() => {
     const art = animations.filter((a) => a.theme === "Art");
     const motionCraft = animations.filter((a) => a.theme === "MotionCraft");
@@ -413,7 +488,6 @@ export const AnimationSection = () => {
 
   return (
     <section id="animation" className="py-24 px-4 relative overflow-hidden">
-      {/* Simplified background visuals */}
       <div className="absolute inset-0 overflow-hidden z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-900/50 to-yellow-900/20 pointer-events-none" />
         <div className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full bg-yellow-500/10 blur-3xl animate-float-slow pointer-events-none" />
