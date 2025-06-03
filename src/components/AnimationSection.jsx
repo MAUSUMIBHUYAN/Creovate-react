@@ -270,14 +270,14 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
 
 const ScrollButton = React.memo(({ direction, onClick }) => (
   <button
-    className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 transform -translate-y-1/2 z-20 p-1 md:p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition`}
+    className={`absolute ${direction === 'left' ? 'left-2' : 'right-2'} top-1/2 transform -translate-y-1/2 z-30 p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition w-10 h-10 flex items-center justify-center`}
     onClick={onClick}
     aria-label={`Scroll ${direction}`}
   >
     {direction === 'left' ? (
-      <ChevronLeft className="text-white w-5 h-5 md:w-6 md:h-6" />
+      <ChevronLeft className="text-white w-6 h-6" />
     ) : (
-      <ChevronRight className="text-white w-5 h-5 md:w-6 md:h-6" />
+      <ChevronRight className="text-white w-6 h-6" />
     )}
   </button>
 ));
@@ -382,6 +382,7 @@ const AnimationRow = ({ title, animations }) => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
           }}
+          style={{ scrollPadding: '0 2rem' }}
         >
           {animationItems}
         </div>
