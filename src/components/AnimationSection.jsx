@@ -155,14 +155,12 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
   const hoverTimerRef = useRef(null);
   
   const handleMouseEnter = () => {
-    if (window.innerWidth >= 768) { // Only auto-play on desktop
-      hoverTimerRef.current = setTimeout(() => {
-        setHoveredId(animation.id);
-        if (videoRef.current) {
-          videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
-        }
-      }, 300);
-    }
+    hoverTimerRef.current = setTimeout(() => {
+      setHoveredId(animation.id);
+      if (videoRef.current) {
+        videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
+      }
+    }, 3000);
   };
 
   const handleMouseLeave = () => {
@@ -178,26 +176,6 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
     setHoveredId(null);
   };
 
-  const handleTouchStart = () => {
-    // On mobile, show video immediately on touch
-    if (window.innerWidth < 768) {
-      setHoveredId(animation.id);
-      if (videoRef.current) {
-        videoRef.current.play().catch(e => console.log("Autoplay prevented:", e));
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (window.innerWidth < 768) {
-      if (videoRef.current) {
-        videoRef.current.pause();
-        videoRef.current.currentTime = 0;
-      }
-      setHoveredId(null);
-    }
-  };
-
   useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
@@ -208,16 +186,14 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
 
   return (
     <motion.div
-      className="flex-shrink-0 w-64 h-80 sm:w-72 sm:h-96 relative rounded-xl overflow-hidden shadow-2xl group cursor-pointer"
+      className="flex-shrink-0 w-64 h-80 md:w-72 md:h-96 relative rounded-xl overflow-hidden shadow-2xl group cursor-pointer"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      whileHover={{ scale: window.innerWidth >= 768 ? 1.03 : 1 }}
+      whileHover={{ scale: 1.03 }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
     >
       <video
         ref={videoRef}
@@ -240,9 +216,9 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
 
-      <div className="relative z-20 h-full flex flex-col justify-end p-6">
+      <div className="relative z-20 h-full flex flex-col justify-end p-4 md:p-6">
         <motion.h3 
-          className="text-2xl font-bold text-white mb-2"
+          className="text-xl md:text-2xl font-bold text-white mb-1 md:mb-2"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -251,7 +227,7 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
         </motion.h3>
 
         <motion.p 
-          className="text-white/80 mb-4 text-sm"
+          className="text-white/80 mb-3 md:mb-4 text-xs md:text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3, delay: 0.1 }}
@@ -267,11 +243,11 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
         >
           <button
             onClick={(e) => handleLike(animation.id, e)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-1 md:p-2 rounded-full hover:bg-white/10 transition-colors"
             aria-label={isLiked ? "Unlike this animation" : "Like this animation"}
           >
             <Heart 
-              className={`w-5 h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`}
+              className={`w-4 h-4 md:w-5 md:h-5 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`}
             />
           </button>
 
@@ -279,10 +255,10 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
             href={animation.path}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors"
+            className="flex items-center gap-1 md:gap-2 bg-white text-black px-3 py-1.5 md:px-4 md:py-2 rounded-full font-medium hover:bg-white/90 transition-colors text-sm md:text-base"
           >
-            <div className="w-5 h-5 bg-black flex items-center justify-center rounded-sm">
-              <Play className="w-3 h-3 fill-white" />
+            <div className="w-4 h-4 md:w-5 md:h-5 bg-black flex items-center justify-center rounded-sm">
+              <Play className="w-2 h-2 md:w-3 md:h-3 fill-white" />
             </div>
             Play
           </a>
@@ -292,25 +268,19 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
   );
 });
 
-const ScrollButton = React.memo(({ direction, onClick, className = '' }) => {
-  const [isPressed, setIsPressed] = useState(false);
-
-  return (
-    <button
-      className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 transform -translate-y-1/2 z-20 p-3 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition active:scale-95 ${className}`}
-      onClick={onClick}
-      onTouchStart={() => setIsPressed(true)}
-      onTouchEnd={() => setIsPressed(false)}
-      aria-label={`Scroll ${direction}`}
-    >
-      {direction === 'left' ? (
-        <ChevronLeft className={`text-white w-6 h-6 ${isPressed ? 'scale-90' : ''}`} />
-      ) : (
-        <ChevronRight className={`text-white w-6 h-6 ${isPressed ? 'scale-90' : ''}`} />
-      )}
-    </button>
-  );
-});
+const ScrollButton = React.memo(({ direction, onClick }) => (
+  <button
+    className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 transform -translate-y-1/2 z-20 p-1 md:p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition`}
+    onClick={onClick}
+    aria-label={`Scroll ${direction}`}
+  >
+    {direction === 'left' ? (
+      <ChevronLeft className="text-white w-5 h-5 md:w-6 md:h-6" />
+    ) : (
+      <ChevronRight className="text-white w-5 h-5 md:w-6 md:h-6" />
+    )}
+  </button>
+));
 
 const AnimationRow = ({ title, animations }) => {
   const scrollRef = useRef(null);
@@ -320,11 +290,6 @@ const AnimationRow = ({ title, animations }) => {
   const [showScrollbar, setShowScrollbar] = useState(false);
   const [hoveredId, setHoveredId] = useState(null);
   const [likedAnimations, setLikedAnimations] = useState([]);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeft, setScrollLeft] = useState(0);
-  const [startPos, setStartPos] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -356,45 +321,15 @@ const AnimationRow = ({ title, animations }) => {
   const scroll = useCallback((direction) => {
     const el = scrollRef.current;
     if (!el) return;
-    
-    const scrollAmount = el.clientWidth * 0.8;
-    
+    const scrollAmount = 300;
     el.scrollBy({ 
       left: direction === "left" ? -scrollAmount : scrollAmount, 
       behavior: "smooth" 
     });
   }, []);
 
-  const handleTouchStart = useCallback((e) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    setIsDragging(true);
-    setStartX(e.touches[0].pageX - el.offsetLeft);
-    setScrollLeft(el.scrollLeft);
-    setStartPos(e.touches[0].pageX);
-  }, []);
-
-  const handleTouchMove = useCallback((e) => {
-    if (!isDragging) return;
-    const el = scrollRef.current;
-    if (!el) return;
-    
-    e.preventDefault();
-    const x = e.touches[0].pageX - el.offsetLeft;
-    const walk = (x - startX) * 2; // Increased multiplier for better responsiveness
-    el.scrollLeft = scrollLeft - walk;
-    setIsScrolling(Math.abs(e.touches[0].pageX - startPos) > 5);
-  }, [isDragging, startX, scrollLeft, startPos]);
-
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-    setIsScrolling(false);
-  }, []);
-
   const handleLike = useCallback((id, e) => {
     e.stopPropagation();
-    e.preventDefault();
     setLikedAnimations(prev => {
       if (prev.includes(id)) {
         return prev.filter(animId => animId !== id);
@@ -417,112 +352,38 @@ const AnimationRow = ({ title, animations }) => {
   )), [animations, hoveredId, likedAnimations, handleLike]);
 
   return (
-    <div className="mb-16 sm:mb-20 relative z-10">
-      <div className="flex items-center justify-between px-4 mb-4">
-        <motion.h3
-          className="text-3xl font-bold text-left text-white"
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-        >
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">
-            {title}
-          </span>
-        </motion.h3>
-        
-        {/* Desktop scroll hint */}
-        <motion.div 
-          className="hidden md:flex items-center gap-2 text-yellow-200/80 text-sm"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          viewport={{ once: true }}
-        >
-          <ChevronRight className="w-4 h-4" />
-          <span>Scroll to see more</span>
-        </motion.div>
-      </div>
-
-      {/* Mobile swipe hint */}
-      <motion.div 
-        className="md:hidden flex items-center gap-2 text-yellow-200/80 text-sm px-4 mb-4"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
+    <div className="mb-12 md:mb-20 relative z-10">
+      <motion.h3
+        className="text-2xl md:text-3xl font-bold mb-3 md:mb-4 text-left text-white px-4"
+        initial={{ opacity: 0, x: -20 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5 }}
         viewport={{ once: true }}
       >
-        <ChevronRight className="w-4 h-4" />
-        <span>Swipe to see more</span>
-      </motion.div>
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">{title}</span>
+      </motion.h3>
 
-       <div className="relative">
+      <div className="relative">
         {showLeft && (
-          <ScrollButton 
-            direction="left" 
-            onClick={() => scroll("left")} 
-            className="hidden sm:block"
-          />
+          <ScrollButton direction="left" onClick={() => scroll("left")} />
         )}
 
         {showRight && (
-          <ScrollButton 
-            direction="right" 
-            onClick={() => scroll("right")} 
-            className="hidden sm:block"
-          />
+          <ScrollButton direction="right" onClick={() => scroll("right")} />
         )}
 
-        <div className="sm:hidden flex justify-between w-full absolute top-1/2 -translate-y-1/2 z-20 px-2 pointer-events-none">
-          {showLeft && (
-            <button
-              onClick={() => scroll("left")}
-              className="p-3 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition pointer-events-auto active:scale-95"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="text-white w-5 h-5" />
-            </button>
-          )}
-          {showRight && (
-            <button
-              onClick={() => scroll("right")}
-              className="p-3 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition pointer-events-auto active:scale-95"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="text-white w-5 h-5" />
-            </button>
-          )}
-        </div>
-
         <div
-          className={`flex overflow-x-auto overflow-y-hidden pb-2 -mx-4 px-4 space-x-6 scroll-smooth ${
+          className={`flex overflow-x-auto overflow-y-hidden pb-2 -mx-2 md:-mx-4 px-2 md:px-4 space-x-4 md:space-x-6 scroll-smooth ${
             showScrollbar ? "scrollbar-thin" : "scrollbar-none"
-          } ${isScrolling ? 'cursor-grabbing' : 'cursor-grab'}`}
+          }`}
           ref={scrollRef}
           onMouseEnter={() => setShowScrollbar(true)}
           onMouseLeave={() => {
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
             timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
           }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          style={{
-            WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
-            scrollSnapType: 'x mandatory', // Better snapping on mobile
-          }}
         >
-          {animationItems.map((item, index) => (
-            <div 
-              key={index}
-              style={{
-                scrollSnapAlign: 'start', // Ensure items snap into place
-                flex: '0 0 auto',
-              }}
-            >
-              {item}
-            </div>
-          ))}
+          {animationItems}
         </div>
       </div>
     </div>
@@ -537,7 +398,7 @@ export const AnimationSection = () => {
   }, []);
 
   return (
-    <section id="animation" className="py-16 sm:py-24 px-4 relative overflow-hidden">
+    <section id="animation" className="py-12 md:py-24 px-2 md:px-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-900/50 to-yellow-900/20 pointer-events-none" />
         <div className="absolute top-1/3 left-1/4 w-64 h-64 rounded-full bg-yellow-500/10 blur-3xl animate-float-slow pointer-events-none" />
@@ -546,7 +407,7 @@ export const AnimationSection = () => {
 
       <div className="container mx-auto max-w-7xl relative z-10">
         <motion.h2
-          className="text-4xl md:text-5xl font-bold mb-6 text-left text-white px-4"
+          className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 md:mb-6 text-left text-white px-2 md:px-4"
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
@@ -558,7 +419,7 @@ export const AnimationSection = () => {
         </motion.h2>
 
         <motion.p
-          className="text-left text-white/80 mb-12 max-w-2xl px-4 text-lg"
+          className="text-left text-white/80 mb-8 md:mb-12 max-w-2xl px-2 md:px-4 text-base md:text-lg"
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
