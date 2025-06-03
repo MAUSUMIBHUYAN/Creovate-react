@@ -243,7 +243,7 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
         >
           <button
             onClick={(e) => handleLike(animation.id, e)}
-            className="p-2 rounded-full hover:bg-white/10 transition-colors"
+            className="p-2 rounded-full hover:bg-white/10 transition-colors active:scale-95"
             aria-label={isLiked ? "Unlike this animation" : "Like this animation"}
           >
             <Heart 
@@ -255,7 +255,7 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
             href={animation.path}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors"
+            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full font-medium hover:bg-white/90 transition-colors active:scale-95"
           >
             <div className="w-5 h-5 bg-black flex items-center justify-center rounded-sm">
               <Play className="w-3 h-3 fill-white" />
@@ -268,9 +268,11 @@ const AnimationItem = React.memo(({ animation, hoveredId, setHoveredId, isLiked,
   );
 });
 
-const ScrollButton = React.memo(({ direction, onClick, className = '' }) => (
+const ScrollButton = React.memo(({ direction, onClick, className = '', isMobile = false }) => (
   <button
-    className={`absolute ${direction === 'left' ? 'left-0' : 'right-0'} top-1/2 transform -translate-y-1/2 z-20 p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition ${className}`}
+    className={`absolute ${direction === 'left' ? 'left-2' : 'right-2'} top-1/2 transform -translate-y-1/2 z-20 p-2 ${
+      isMobile ? 'bg-black/50' : 'bg-black/70'
+    } rounded-full backdrop-blur hover:bg-yellow-500/30 active:scale-95 transition ${className}`}
     onClick={onClick}
     aria-label={`Scroll ${direction}`}
   >
@@ -287,23 +289,32 @@ const AnimationRow = ({ title, animations }) => {
   const timeoutRef = useRef(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
-  const [showScrollbar, setShowScrollbar] = useState(false);
   const [hoveredId, setHoveredId] = useState(null);
   const [likedAnimations, setLikedAnimations] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   const checkScroll = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
 
-    setShowLeft(el.scrollLeft > 0);
-    setShowRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 5);
-    setShowScrollbar(true);
+    const showLeft = el.scrollLeft > 10;
+    const showRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 10;
     
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
+    setShowLeft(showLeft);
+    setShowRight(showRight);
   }, []);
 
   useEffect(() => {
@@ -311,9 +322,7 @@ const AnimationRow = ({ title, animations }) => {
     if (!el) return;
 
     checkScroll();
-    
     el.addEventListener("scroll", checkScroll, { passive: true });
-    timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
 
     return () => {
       el.removeEventListener("scroll", checkScroll);
@@ -325,13 +334,13 @@ const AnimationRow = ({ title, animations }) => {
     const el = scrollRef.current;
     if (!el) return;
     
-    const scrollAmount = el.clientWidth * 0.8;
+    const scrollAmount = isMobile ? el.clientWidth * 0.75 : el.clientWidth * 0.8;
     
     el.scrollBy({ 
       left: direction === "left" ? -scrollAmount : scrollAmount, 
       behavior: "smooth" 
     });
-  }, []);
+  }, [isMobile]);
 
   const handleTouchStart = useCallback((e) => {
     const el = scrollRef.current;
@@ -347,10 +356,11 @@ const AnimationRow = ({ title, animations }) => {
     const el = scrollRef.current;
     if (!el) return;
     
-    e.preventDefault();
     const x = e.touches[0].pageX - el.offsetLeft;
     const walk = (x - startX) * 1.5;
-    el.scrollLeft = scrollLeft - walk;
+    requestAnimationFrame(() => {
+      el.scrollLeft = scrollLeft - walk;
+    });
   }, [isDragging, startX, scrollLeft]);
 
   const handleTouchEnd = useCallback(() => {
@@ -358,6 +368,7 @@ const AnimationRow = ({ title, animations }) => {
   }, []);
 
   const handleLike = useCallback((id, e) => {
+    e.preventDefault();
     e.stopPropagation();
     setLikedAnimations(prev => {
       if (prev.includes(id)) {
@@ -368,6 +379,22 @@ const AnimationRow = ({ title, animations }) => {
       }
     });
   }, []);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const options = { passive: false };
+    el.addEventListener('touchstart', handleTouchStart, options);
+    el.addEventListener('touchmove', handleTouchMove, options);
+    el.addEventListener('touchend', handleTouchEnd, options);
+
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart, options);
+      el.removeEventListener('touchmove', handleTouchMove, options);
+      el.removeEventListener('touchend', handleTouchEnd, options);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   const animationItems = useMemo(() => animations.map((animation) => (
     <AnimationItem 
@@ -395,37 +422,40 @@ const AnimationRow = ({ title, animations }) => {
           </span>
         </motion.h3>
         
-        {/* Desktop scroll hint */}
+        {!isMobile && (
+          <motion.div 
+            className="hidden md:flex items-center gap-2 text-yellow-200/80 text-sm"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            viewport={{ once: true }}
+          >
+            <ChevronRight className="w-4 h-4" />
+            <span>Scroll to see more</span>
+          </motion.div>
+        )}
+      </div>
+
+      {isMobile && (
         <motion.div 
-          className="hidden md:flex items-center gap-2 text-yellow-200/80 text-sm"
+          className="flex items-center gap-2 text-yellow-200/80 text-sm px-4 mb-4"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
           viewport={{ once: true }}
         >
           <ChevronRight className="w-4 h-4" />
-          <span>Scroll to see more</span>
+          <span>Swipe to see more</span>
         </motion.div>
-      </div>
-
-      {/* Mobile swipe hint */}
-      <motion.div 
-        className="md:hidden flex items-center gap-2 text-yellow-200/80 text-sm px-4 mb-4"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        viewport={{ once: true }}
-      >
-        <ChevronRight className="w-4 h-4" />
-        <span>Swipe to see more</span>
-      </motion.div>
+      )}
 
       <div className="relative">
         {showLeft && (
           <ScrollButton 
             direction="left" 
             onClick={() => scroll("left")} 
-            className="hidden md:block"
+            isMobile={isMobile}
+            className={isMobile ? "md:hidden" : "hidden md:block"}
           />
         )}
 
@@ -433,44 +463,19 @@ const AnimationRow = ({ title, animations }) => {
           <ScrollButton 
             direction="right" 
             onClick={() => scroll("right")} 
-            className="hidden md:block"
+            isMobile={isMobile}
+            className={isMobile ? "md:hidden" : "hidden md:block"}
           />
         )}
 
-        <div className="md:hidden flex justify-between w-full absolute top-1/2 -translate-y-1/2 z-20 px-2">
-          {showLeft && (
-            <button
-              onClick={() => scroll("left")}
-              className="p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="text-white w-6 h-6" />
-            </button>
-          )}
-          {showRight && (
-            <button
-              onClick={() => scroll("right")}
-              className="p-2 bg-black/70 rounded-full backdrop-blur hover:bg-yellow-500/30 transition"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="text-white w-6 h-6" />
-            </button>
-          )}
-        </div>
-
         <div
-          className={`flex overflow-x-auto overflow-y-hidden pb-2 -mx-4 px-4 space-x-6 scroll-smooth ${
-            showScrollbar ? "scrollbar-thin" : "scrollbar-none"
-          }`}
           ref={scrollRef}
-          onMouseEnter={() => setShowScrollbar(true)}
-          onMouseLeave={() => {
-            if (timeoutRef.current) clearTimeout(timeoutRef.current);
-            timeoutRef.current = setTimeout(() => setShowScrollbar(false), 3000);
+          className="flex overflow-x-auto overflow-y-hidden pb-6 -mx-4 px-4 space-x-6 scroll-smooth touch-pan-x"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
           }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
           {animationItems}
         </div>
